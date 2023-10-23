@@ -78,3 +78,47 @@ legFunc = function(x, q){
   
   return(legFuncSum)
 }
+
+
+
+
+#####################################################################3
+
+# betasTwo = runif(3, -1, 1)
+betasTen = runif(11, -1, 1)
+onesTwo = rep(1, 3)
+onesTen = rep(1, 11)
+
+dataListTwo = list()
+dataListTen = list()
+
+nSeq = 20:110
+sigmaSeq = seq(0.2, 1.1, by = 0.1)
+
+errorMat = matrix(0, length(sigmaSeq), length(nSeq))
+
+for(s in 1:length(sigmaSeq)){
+  
+  nListTwo = list()
+  nListTen = list()
+  for(n in 1:length(nSeq)){
+    
+    xi = runif(nSeq[n], -1, 1)
+    eps = rnorm(nSeq[n], mean = 0, sd = sigmaSeq[s]^2)
+    
+    target = f2(betasTen, xi)
+    
+    fTwo = f2(onesTwo, xi) + eps
+    fTen = f2(onesTen, xi) + eps
+    nListTwo[[n]] = fTwo
+    nListTen[[n]] = fTen
+    
+    errorMat[s, n] = mean((fTen - fTwo)^2)
+    
+  }
+  
+  dataListTwo[[s]] = nListTwo
+  dataListTen[[s]] = nListTen
+}
+
+errorPlotData = melt(errorMat)
