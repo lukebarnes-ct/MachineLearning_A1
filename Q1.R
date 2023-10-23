@@ -11,10 +11,6 @@ set.seed(2023)
 
 N = 100
 x = seq(-1, 1, length = N)
-# x = runif(N, -1, 1)
-
-# I can't seem to get the formulation of the legendre polynomial given to us to work in R
-# Using another explicit formulation given for the polynomials
 
 legFunc = function(x, q){
   
@@ -22,15 +18,12 @@ legFunc = function(x, q){
   
   for (k in 0:q){
     
-    fact1 = factorial(q)/(factorial(k)*factorial(q-k))
-    fact2 = factorial(q+k)/(factorial(k)*factorial(q))
-    
-    legSum = ((x-1)/2)^k * (fact1) * (fact2)
+    legSum = (x)^k * (choose(q, k)) * (choose((q+k-1)/2, q))
     
     legFuncSum = legFuncSum + legSum
   }
   
-  return(legFuncSum)
+  return(2^q * legFuncSum)
 }
 
 legPolyMat = matrix(0, N, 6)
