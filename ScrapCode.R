@@ -122,3 +122,128 @@ for(s in 1:length(sigmaSeq)){
 }
 
 errorPlotData = melt(errorMat)
+
+g = f1(onesTwo, xi)
+f = f2(betasTen, xi)
+int = (g - f)^2 * 0.5
+outIntegral(xi, onesTwo, betasTen)
+
+outIntegral = function(x, betas, otherBetas){
+  
+  f = f1(betas, x)
+  g = f2(otherBetas, x)
+  int = (g - f)^2 * 0.5
+  
+  return(int)
+}
+
+sc = scale(betasTen, center = 1)
+
+betas = function(x, y){
+  
+  mod = lm(y~x)
+  return(mod$coefficients)
+}
+
+f1 = function(x, n){
+  
+  xMat = matrix(0, length(x), n)
+  
+  for (i in 1:n){
+    xMat[, i] = x^i
+  }
+  
+  return(xMat)
+}
+
+dataListTwo = list()
+dataListTen = list()
+
+nSeq = 20:110
+sigmaSeq = seq(0.2, 1.1, by = 0.1)
+
+errorMat = matrix(0, length(sigmaSeq), length(nSeq))
+
+for(s in 1:length(sigmaSeq)){
+  
+  nListTwo = list()
+  nListTen = list()
+  
+  xLat = seq(-1,1, 0.01)
+  nDX  = length(xLat) 
+  gBar = rep(0, nDX)
+  GD   = matrix(0, length(nSeq), nDX)
+  
+  for(n in 1:length(nSeq)){
+    
+    xi = runif(nSeq[n], -1, 1)
+    eps = rnorm(nSeq[n], mean = 0, sd = sigmaSeq[s]^2)
+    target = f2(betasTen, xi) + eps
+    
+    resMod2 = lm(target~poly(xi, 2))
+    resMod10 = lm(target~poly(xi, 10))
+    
+    xOut = runif(nSeq[n], -1, 1)
+    epsOut = rnorm(nSeq[n], mean = 0, sd = sigmaSeq[s]^2)
+    yOut = f2(betasTen, xi) + eps
+    
+    resPred2 = predict(resMod2, data.frame(x = xOut))
+    resPred10 = predict(resMod10, data.frame(x = xOut))
+    
+    E_Out2 = mean((resPred2 - yOut)^2)
+    E_Out10 = mean((resPred10 - yOut)^2)
+    
+    nListTwo[[n]] = E_Out2
+    nListTen[[n]] = E_Out10
+    
+    errorMat[s, n] = E_Out10 - E_Out2
+    
+  }
+  
+  dataListTwo[[s]] = nListTwo
+  dataListTen[[s]] = nListTen
+  
+  gBar = gBar / length(nSeq)
+}
+
+errorPlotData = melt(errorMat)
+
+ggplot(errorPlotData, aes(x = Var2, y = Var1)) + 
+  geom_raster(aes(fill = value)) +
+  xlab("N") + ylab("Sigma") + labs(color = "Error") +
+  scale_fill_gradient(low = "skyblue", high = "red") +
+  theme_bw()
+
+###########################################################################
+
+xLat = seq(-1,1, dx)
+sigma = 0.5
+
+nDX  = length(xLat) 
+gBar2 = rep(0, nDX)
+gBar10 = rep(0, nDX)
+GD2   = matrix(0, nDX, 1)
+GD10   = matrix(0, nDX, 1)
+
+N = 500
+xi = runif(N, -1, 1)
+eps = rnorm(N, mean = 0, sd = sigma^2)
+target = f2(betasTen, xi) + eps
+
+resMod2 = lm(target ~ poly(xi, 2))
+resMod10 = lm(target ~ poly(xi, 10))
+
+resMod2Coefs = coefficients(resMod2)
+resMod10Coefs = coefficients(resMod10)
+
+resPred2 = cbind(1, poly(xLat, 2)) %*% resMod2Coefs
+resPred10 = cbind(1, poly(xLat, 10)) %*% resMod10Coefs
+
+gBar2 = gBar2 + resPred2
+gBar10 = gBar10 + resPred10
+
+GD2[i, ] = resPred2
+GD10[i, ] = resPred2
+
+require(plotly)
+plot_ly(x = nSeq, y = sigmaSeq, z = errorMat, type = "contour")
