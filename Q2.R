@@ -267,11 +267,11 @@ colnames(errorPlotData2) = c("QF", "N", "Error")
 
 round(errorPlotData2$Error, 3)
 
-errorPlotData2$Error = ifelse(errorPlotData2$Error >= 0.2, 0.2, errorPlotData2$Error)
-errorPlotData2$Error = ifelse((errorPlotData2$Error < 0.2) & (errorPlotData2$Error >= 0.1), 0.1, errorPlotData2$Error)
-errorPlotData2$Error = ifelse((errorPlotData2$Error < 0.1) & (errorPlotData2$Error >= -0.1), 0, errorPlotData2$Error)
-errorPlotData2$Error = ifelse((errorPlotData2$Error < -0.1) & (errorPlotData2$Error >= -0.15), -0.1, errorPlotData2$Error)
-errorPlotData2$Error = ifelse(errorPlotData2$Error < -0.15, -0.2, errorPlotData2$Error)
+aa = 0.2
+ee = -0.2
+
+errorPlotData2$Error = ifelse(errorPlotData2$Error >= aa, 0.2, errorPlotData2$Error)
+errorPlotData2$Error = ifelse(errorPlotData2$Error < ee, -0.2, errorPlotData2$Error)
 
 pdf("errorPlot_Q2B.pdf")
 ggplot(errorPlotData2, aes(x = N, y = QF, fill = Error)) + 
@@ -280,4 +280,3 @@ ggplot(errorPlotData2, aes(x = N, y = QF, fill = Error)) +
   scale_fill_gradientn(colours = c("navyblue", "lightblue", "darkgreen", "gold", "maroon")) +
   theme_bw()
 dev.off()
-

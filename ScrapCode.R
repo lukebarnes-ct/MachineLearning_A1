@@ -481,3 +481,60 @@ ggplot(errorPlotData, aes(x = N, y = Sigma, fill = Error)) +
   xlab("N") + ylab("Sigma") + labs(color = "Error") +
   scale_fill_gradient2(low = "navyblue", mid = "darkgreen", high = "maroon") +
   theme_bw()
+
+errorPlotData2$Error = ifelse(errorPlotData2$Error >= 0.2, 0.2, errorPlotData2$Error)
+errorPlotData2$Error = ifelse((errorPlotData2$Error < 0.2) & (errorPlotData2$Error >= 0.1), 0.1, errorPlotData2$Error)
+errorPlotData2$Error = ifelse((errorPlotData2$Error < 0.1) & (errorPlotData2$Error >= -0.1), 0, errorPlotData2$Error)
+errorPlotData2$Error = ifelse((errorPlotData2$Error < -0.1) & (errorPlotData2$Error >= -0.15), -0.1, errorPlotData2$Error)
+errorPlotData2$Error = ifelse(errorPlotData2$Error < -0.15, -0.2, errorPlotData2$Error)
+
+pdf("errorPlot_Q2B.pdf")
+ggplot(errorPlotData2, aes(x = N, y = QF, fill = Error)) + 
+  geom_raster(interpolate = TRUE) +
+  xlab("N") + ylab("QF") + labs(color = "Error") +
+  scale_fill_gradientn(colours = c("navyblue", "lightblue", "darkgreen", "gold", "maroon")) +
+  theme_bw()
+dev.off()
+
+
+nSeq = seq(20, 110, by = 10)
+sigmaSeq = seq(0.2, 1.1, by = 0.1)
+
+newErrorMat = log(errorMat + 1) + min(errorMat)
+errorPlotData = melt(newErrorMat)
+plotExpand = expand.grid(sigmaSeq, nSeq)
+errorPlotData = cbind(plotExpand, errorPlotData$value)
+colnames(errorPlotData) = c("Sigma", "N", "Error")
+
+round(errorPlotData$Error, 3)
+
+errorPlotData$Error = ifelse(errorPlotData$Error >= 0.2, 0.2, errorPlotData$Error)
+errorPlotData$Error = ifelse((errorPlotData$Error < 0.2) & (errorPlotData$Error >= 0.1), 0.1, errorPlotData$Error)
+errorPlotData$Error = ifelse((errorPlotData$Error < 0.1) & (errorPlotData$Error >= -0.1), 0, errorPlotData$Error)
+errorPlotData$Error = ifelse((errorPlotData$Error < -0.1) & (errorPlotData$Error >= -0.15), -0.1, errorPlotData$Error)
+errorPlotData$Error = ifelse(errorPlotData$Error < -0.15, -0.2, errorPlotData$Error)
+
+aa = 0.2
+bb = 0.1
+dd = -0.1
+ee = -0.2
+
+errorPlotData2$Error = ifelse(errorPlotData2$Error >= aa, 0.2, errorPlotData2$Error)
+errorPlotData2$Error = ifelse((errorPlotData2$Error < aa) & (errorPlotData2$Error >= bb), 0.1, errorPlotData2$Error)
+errorPlotData2$Error = ifelse((errorPlotData2$Error < bb) & (errorPlotData2$Error >= dd), 0, errorPlotData2$Error)
+errorPlotData2$Error = ifelse((errorPlotData2$Error < dd) & (errorPlotData2$Error >= ee), -0.1, errorPlotData2$Error)
+errorPlotData2$Error = ifelse(errorPlotData2$Error < ee, -0.2, errorPlotData2$Error)
+
+###########################################################################
+
+hVal1 = matrix(0, N, N)
+hVal2 = hVal1
+expComb = expand.grid(x1, x2)
+
+for(i in 1:N){
+  
+  for (j in 1:N){
+    
+    hVal1 = H1()
+  }
+}
