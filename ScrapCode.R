@@ -233,6 +233,22 @@ target = f2(betasTen, xi) + eps
 resMod2 = lm(target ~ poly(xi, 2))
 resMod10 = lm(target ~ poly(xi, 10))
 
+X2 = legPoly(xi, 2)
+X10 = legPoly(xi, 10)
+
+betaTwo = solve(t(X2) %*% X2) %*% t(X2) %*% target
+betaTen = solve(t(X10) %*% X10) %*% t(X10) %*% target
+
+resMod2 = lm(target ~ X2[, -1])
+resMod10 = lm(target ~ X10[, -1])
+
+resMod2Coefs = coefficients(resMod2)
+resMod10Coefs = coefficients(resMod10)
+
+resPred2 = legPoly(xLat, 2) %*% resMod2Coefs
+resPred10 = legPoly(xLat, 10) %*% resMod10Coefs
+
+
 resMod2Coefs = coefficients(resMod2)
 resMod10Coefs = coefficients(resMod10)
 
@@ -247,3 +263,221 @@ GD10[i, ] = resPred2
 
 require(plotly)
 plot_ly(x = nSeq, y = sigmaSeq, z = errorMat, type = "contour")
+
+ggplot(errorPlotData, aes(x = N, y = Sigma)) + 
+  geom_raster(aes(fill = Error)) +
+  xlab("N") + ylab("Sigma") + labs(color = "Error") +
+  scale_fill_gradient(low = "skyblue", high = "red") +
+  theme_bw()
+
+errorSimulation = function(N, sigma){
+  
+  xLat = seq(-1,1, dx)
+  nDX  = length(xLat) 
+  gBar2 = rep(0, nDX)
+  gBar10 = rep(0, nDX)
+  GD2   = matrix(0, M, nDX)
+  GD10   = matrix(0, M, nDX)
+  
+  for (i in 1:M){
+    
+    xi = runif(N, -1, 1)
+    eps = rnorm(N, mean = 0, sd = sigma^2)
+    target = f2(betasTen, xi) + eps
+    
+    resMod2 = lm(target~poly(xi, 2))
+    resMod10 = lm(target~poly(xi, 10))
+    
+    resMod2Coefs = coefficients(resMod2)
+    resMod10Coefs = coefficients(resMod10)
+    
+    resPred2 = cbind(1, poly(xLat, 2)) %*% resMod2Coefs
+    resPred10 = cbind(1, poly(xLat, 10)) %*% resMod10Coefs
+    
+    gBar2 = gBar2 + resPred2
+    gBar10 = gBar10 + resPred10
+    
+    GD2[i, ] = resPred2
+    GD10[i, ] = resPred2
+    
+  }
+  
+  gBar2 = gBar2 / M
+  gBar10 = gBar10 / M
+  
+  phiX = 0.5
+  
+  yF = f2(betasTen, xLat)
+  
+  bias2 = sum((gBar2 - yF)[-nDX]^2 * phiX * dx)
+  
+  bias10 = sum((gBar10 - yF)[-nDX]^2 * phiX * dx)
+  
+  ones = matrix(1, M, 1)
+  
+  varX2 = colSums((GD2 - ones %*% t(gBar2))^2) / M
+  varX10 = colSums((GD10 - ones %*% t(gBar10))^2) / M
+  
+  var2 = sum(varX2[-nDX] * phiX * dx)
+  var10 = sum(varX10[-nDX] * phiX * dx)
+  
+  E_Out2 = bias2 + var2
+  E_Out10 = bias10 + var10
+  
+  #ExpError = E_Out10 - E_Out2
+  
+  #return(ExpError)
+  return(list(E2 = E_Out2, E10 = E_Out10))
+}
+
+######################################################################
+
+errorSimulation = function(N, sigma){
+  
+  xLat = seq(-1,1, dx)
+  nDX  = length(xLat) 
+  gBar2 = rep(0, nDX)
+  gBar10 = rep(0, nDX)
+  GD2   = matrix(0, M, nDX)
+  GD10   = matrix(0, M, nDX)
+  
+  for (i in 1:M){
+    
+    xi = runif(N, -1, 1)
+    eps = rnorm(N, mean = 0, sd = sigma)
+    target = f2(betasTen, xi) + eps
+    
+    X2 = legPoly(xi, 2)
+    X10 = legPoly(xi, 10)
+    
+    #resMod2 = lm(target ~ X2[, -1])
+    #resMod10 = lm(target ~ X10[, -1])
+    
+    betaTwo = solve(t(X2) %*% X2) %*% t(X2) %*% target
+    betaTen = solve(t(X10) %*% X10) %*% t(X10) %*% target
+    
+    #resMod2Coefs = coefficients(resMod2)
+    #resMod10Coefs = coefficients(resMod10)
+    
+    resPred2 = legPoly(xLat, 2) %*% betaTwo
+    resPred10 = legPoly(xLat, 10) %*% betaTen
+    
+    gBar2 = gBar2 + resPred2
+    gBar10 = gBar10 + resPred10
+    
+    GD2[i, ] = resPred2
+    GD10[i, ] = resPred2
+    
+  }
+  
+  gBar2 = gBar2 / M
+  gBar10 = gBar10 / M
+  
+  phiX = 0.5
+  
+  yF = f2(betasTen, xLat)
+  
+  bias2 = sum((gBar2 - yF)[-nDX]^2 * phiX * dx)
+  
+  bias10 = sum((gBar10 - yF)[-nDX]^2 * phiX * dx)
+  
+  ones = matrix(1, M, 1)
+  
+  varX2 = colSums((GD2 - ones %*% t(gBar2))^2) / M
+  varX10 = colSums((GD10 - ones %*% t(gBar10))^2) / M
+  
+  var2 = sum(varX2[-nDX] * phiX * dx)
+  var10 = sum(varX10[-nDX] * phiX * dx)
+  
+  E_Out2 = bias2 + var2
+  E_Out10 = bias10 + var10
+  
+  #ExpError = E_Out10 - E_Out2
+  
+  #return(ExpError)
+  return(list(E2 = E_Out2, E10 = E_Out10, G2 = gBar2, G10 = gBar10))
+}
+
+errorPlotData$Error = ifelse(errorPlotData$Error > -0.1, 0.2, errorPlotData$Error)
+errorPlotData$Error = ifelse((errorPlotData$Error > -0.2) & (errorPlotData$Error < -0.1), 0, errorPlotData$Error)
+errorPlotData$Error = ifelse(errorPlotData$Error < -0.2, -0.2, errorPlotData$Error)
+
+############################################################################
+
+errorSimulation = function(N, sigma){
+  
+  xLat = seq(-1,1, dx)
+  nDX  = length(xLat) 
+  gBar2 = rep(0, nDX)
+  gBar10 = rep(0, nDX)
+  GD2   = matrix(0, M, nDX)
+  GD10   = matrix(0, M, nDX)
+  
+  for (i in 1:M){
+    
+    xi = runif(N, -1, 1)
+    eps = rnorm(N, mean = 0, sd = sigma^2)
+    target = f2(betasTen, xi) + eps
+    
+    X2 = cbind(1, poly(xi, 2))
+    X10 = cbind(1, poly(xi, 10))
+    
+    #X2 = legPoly(xi, 2)
+    #X10 = legPoly(xi, 10)
+    
+    betaTwo = solve(t(X2) %*% X2) %*% t(X2) %*% target
+    betaTen = solve(t(X10) %*% X10) %*% t(X10) %*% target
+    
+    X2Lat = cbind(1, poly(xLat, 2))
+    X10Lat = cbind(1, poly(xLat, 10))
+    
+    resPred2 = X2Lat %*% betaTwo
+    resPred10 = X10Lat %*% betaTen
+    
+    #resPred2 = legPoly(xLat, 2) %*% betaTwo
+    #resPred10 = legPoly(xLat, 10) %*% betaTen
+    
+    #gBar2 = gBar2 + resPred2
+    #gBar10 = gBar10 + resPred10
+    
+    GD2[i, ] = resPred2
+    GD10[i, ] = resPred10
+    
+  }
+  
+  #gBar2 = gBar2 / M
+  #gBar10 = gBar10 / M
+  
+  gBar2 = colMeans(GD2)
+  gBar10 = colMeans(GD10)
+  
+  phiX = 0.5
+  
+  yF = f2(betasTen, xLat) + rnorm(nDX, mean = 0, sd = sigma^2)
+  
+  bias2 = sum((gBar2 - yF)[-nDX]^2 * phiX * dx)
+  
+  bias10 = sum((gBar10 - yF)[-nDX]^2 * phiX * dx)
+  
+  ones = matrix(1, M, 1)
+  
+  varX2 = colSums((GD2 - ones %*% t(gBar2))^2) / M
+  
+  varX10 = colSums((GD10 - ones %*% t(gBar10))^2) / M
+  
+  var2 = sum(varX2[-nDX] * phiX * dx)
+  var10 = sum(varX10[-nDX] * phiX * dx)
+  
+  E_Out2 = bias2 + var2
+  E_Out10 = bias10 + var10
+  
+  return(list(E2 = E_Out2, E10 = E_Out10,
+              bias2 = bias2, bias10 = bias10,
+              var2 = var2, var10 = var10))
+}
+
+ggplot(errorPlotData, aes(x = N, y = Sigma, fill = Error)) + 
+  geom_raster(interpolate = TRUE) +
+  xlab("N") + ylab("Sigma") + labs(color = "Error") +
+  scale_fill_gradient2(low = "navyblue", mid = "darkgreen", high = "maroon") +
+  theme_bw()
