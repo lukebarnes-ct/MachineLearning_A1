@@ -538,3 +538,6 @@ for(i in 1:N){
     hVal1 = H1()
   }
 }
+
+library(pdftools)
+pdf_combine(c("STA5068Z_A1_BRNLUK005.pdf", "Department of Statistical Sciences - Plagiarism Declaration.pdf"), output = "STA5068Z_A1_BRNLUK005_.pdf")
